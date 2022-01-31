@@ -5,13 +5,23 @@ services:
     image: minio/minio:latest
     env_file: .env
     ports:
-      - 10.10.0.3:9001:9001
-    restart: always
+      - 9000:9000
+      - 9001:9001
     volumes:
       - /mnt/storage:/data
-    command:
-      - server
-      - /data
-      - --json
-      - --console-address
-      - ":9001"
+    command: server /data --json --console-address ":9001"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
+      - "traefik.http.routers.minio.rule=Host(`${MINIO_HOST}`)"
+      - "traefik.http.routers.minio.entrypoints=https"
+      - "traefik.http.routers.minio.service=minio"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+      - "traefik.http.routers.minio-console.rule=Host(`${MINIO_CONSOLE_HOST}`)"
+      - "traefik.http.routers.minio-console.entrypoints=https"
+      - "traefik.http.routers.minio-console.service=minio-console"
+      - "traefik.docker.network=edge"
+    deploy:
+      replicas: 3
+      placement:
+        constraints: [node.labels.minio == true]
