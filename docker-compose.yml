@@ -6,6 +6,7 @@ services:
     env_file: .env
     ports:
       - 10.10.0.3:9001:9001
+    restart: always
     volumes:
       - /mnt/storage:/data
     command:
